@@ -1,344 +1,258 @@
--- ====================================================================
--- SCRIPT DE BODY-SWAP: CAPTURA O CARRO DO JOGO, OCULTA LATARIA E APLICA MESH
--- ====================================================================
-
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
 
-local currentCarData = ""
-local attachedCarModel = nil
-local customMeshHolder = nil
-local isBodyHidden = false
+local uiParent = (gethui and gethui()) or game:GetService("CoreGui")
 
----------------------------------------------------------------------
--- CONFIGURAÇÕES DE OFFSET E ROTAÇÃO DA MESH SOBRE O CARRO
----------------------------------------------------------------------
-local meshOffset = { X = 0, Y = 0, Z = 0 }
-local meshRotation = { Pitch = 0, Yaw = 0, Roll = 0 }
-
----------------------------------------------------------------------
--- FUNÇÃO PARA ATUALIZAR A POSIÇÃO DA MESH NO CARRO
----------------------------------------------------------------------
-local function updateMeshTransform()
-    if not customMeshHolder or not attachedCarModel then return end
-    local rootPart = attachedCarModel.PrimaryPart or attachedCarModel:FindFirstChildWhichIsA("BasePart")
-    if not rootPart then return end
-
-    local weld = customMeshHolder:FindFirstChild("MeshWeld")
-    if weld then
-        local posCFrame = CFrame.new(meshOffset.X, meshOffset.Y, meshOffset.Z)
-        local rotCFrame = CFrame.Angles(
-            math.rad(meshRotation.Pitch),
-            math.rad(meshRotation.Yaw),
-            math.rad(meshRotation.Roll)
-        )
-        weld.C0 = posCFrame * rotCFrame
-    end
+if uiParent:FindFirstChild("PainelAuraDelta") then
+	uiParent.PainelAuraDelta:Destroy()
 end
 
----------------------------------------------------------------------
--- CARREGAR E APLICAR A MESH NO CARRO CAPTURADO
----------------------------------------------------------------------
-local function applyCustomMeshToCar(dataString)
-    local char = LocalPlayer.Character
-    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
-    local seat = humanoid and humanoid.SeatPart
+-- ==========================================
+-- CRIANDO A INTERFACE (UI)
+-- ==========================================
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "PainelAuraDelta"
+ScreenGui.Parent = uiParent
 
-    if not seat or not seat:IsA("VehicleSeat") and not seat:IsA("Seat") then
-        warn("⚠️ Você precisa estar sentado em um carro para aplicar a mesh!")
-        return
-    end
+-- ==========================================
+-- MENU PRINCIPAL (FRAME)
+-- ==========================================
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 220, 0, 260)
+Frame.Position = UDim2.new(0.5, -110, 0.5, -130)
+Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Parent = ScreenGui
 
-    attachedCarModel = seat.Parent
-    
-    -- Define uma PrimaryPart se não houver
-    if not attachedCarModel.PrimaryPart then
-        attachedCarModel.PrimaryPart = seat
-    end
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = Frame
 
-    -- 1. Ocultar a lataria original do carro (mantendo rodas e colisão de física)
-    for _, part in ipairs(attachedCarModel:GetDescendants()) do
-        if part:IsA("BasePart") and part ~= seat then
-            local nameLower = part.Name:lower()
-            -- Se não for roda, deixa invisível
-            if not string.find(nameLower, "wheel") and not string.find(nameLower, "pneu") and not string.find(nameLower, "rim") then
-                part.Transparency = 1
-                -- Opcional: part.CanCollide = false (se quiser que só a mesh colida ou deixe a física padrão)
-            end
-        end
-    end
-    isBodyHidden = true
+-- Título Atualizado
+local Titulo = Instance.new("TextLabel")
+Titulo.Size = UDim2.new(1, 0, 0, 40)
+Titulo.BackgroundTransparency = 1
+Titulo.Text = "Customized Glows"
+Titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
+Titulo.Font = Enum.Font.GothamBold
+Titulo.TextSize = 14
+Titulo.Parent = Frame
 
-    -- 2. Limpar mesh anterior se já existir
-    if customMeshHolder then customMeshHolder:Destroy() end
+-- ==========================================
+-- BOTÃO DE MINIMIZAR (BOLINHA 🤟)
+-- ==========================================
+local Bolinha = Instance.new("TextButton")
+Bolinha.Size = UDim2.new(0, 45, 0, 45)
+Bolinha.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Bolinha.Text = "🤟"
+Bolinha.TextSize = 22
+Bolinha.Visible = false -- Fica invisível até você fechar o menu
+Bolinha.Parent = ScreenGui
 
-    -- 3. Criar container para a nova mesh
-    customMeshHolder = Instance.new("Model")
-    customMeshHolder.Name = "CustomMeshBody"
-    customMeshHolder.Parent = attachedCarModel
+local BolinhaCorner = Instance.new("UICorner")
+BolinhaCorner.CornerRadius = UDim.new(1, 0) -- Deixa perfeitamente redondo (bolinha)
+BolinhaCorner.Parent = Bolinha
 
-    local rootPart = Instance.new("Part")
-    rootPart.Name = "MeshRoot"
-    rootPart.Size = Vector3.new(2, 1, 4)
-    rootPart.Transparency = 1
-    rootPart.CanCollide = false
-    rootPart.Anchored = false
-    rootPart.Parent = customMeshHolder
+-- Botão de Fechar/Minimizar (O 'X' no menu)
+local BotaoFechar = Instance.new("TextButton")
+BotaoFechar.Size = UDim2.new(0, 30, 0, 30)
+BotaoFechar.Position = UDim2.new(1, -35, 0, 5)
+BotaoFechar.BackgroundTransparency = 1
+BotaoFechar.Text = "X"
+BotaoFechar.TextColor3 = Color3.fromRGB(255, 50, 50)
+BotaoFechar.Font = Enum.Font.GothamBold
+BotaoFechar.TextSize = 16
+BotaoFechar.Parent = Frame
 
-    local weld = Instance.new("Weld")
-    weld.Name = "MeshWeld"
-    weld.Part0 = attachedCarModel.PrimaryPart
-    weld.Part1 = rootPart
-    weld.C0 = CFrame.new(meshOffset.X, meshOffset.Y, meshOffset.Z) * CFrame.Angles(
-        math.rad(meshRotation.Pitch), math.rad(meshRotation.Yaw), math.rad(meshRotation.Roll)
-    )
-    weld.Parent = customMeshHolder
-
-    if dataString == "" or not dataString then return end
-
-    -- 4. Interpretar a string da lataria e criar as peças
-    local partsList = string.split(dataString, "|")
-    for _, partInfo in ipairs(partsList) do
-        local data = string.split(partInfo, ";")
-        if #data >= 17 then
-            local pName     = data[1]
-            local meshId    = data[2]
-            local textureId = data[3]
-            local posX      = tonumber(data[4]) or 0
-            local posY      = tonumber(data[5]) or 0
-            local posZ      = tonumber(data[6]) or 0
-            local rotX      = tonumber(data[7]) or 0
-            local rotY      = tonumber(data[8]) or 0
-            local rotZ      = tonumber(data[9]) or 0
-            local scaleX    = tonumber(data[10]) or 1
-            local scaleY    = tonumber(data[11]) or 1
-            local scaleZ    = tonumber(data[12]) or 1
-            local colorR    = tonumber(data[13]) or 255
-            local colorG    = tonumber(data[14]) or 255
-            local colorB    = tonumber(data[15]) or 255
-            local trans     = tonumber(data[16]) or 0
-            local reflect   = tonumber(data[17]) or 0
-
-            local p = Instance.new("Part")
-            p.Name = pName
-            p.Size = Vector3.new(1, 1, 1)
-            p.CanCollide = false
-            p.CanTouch = false
-            p.CanQuery = false
-            p.Anchored = false
-            p.Massless = true
-            p.Transparency = trans
-            p.Reflectance = reflect
-            p.Color = Color3.fromRGB(colorR, colorG, colorB)
-            p.Parent = customMeshHolder
-
-            local m = Instance.new("SpecialMesh")
-            m.MeshType = Enum.MeshType.FileMesh
-            if meshId ~= "" then m.MeshId = "rbxassetid://" .. meshId end
-            if textureId ~= "" then m.TextureId = "rbxassetid://" .. textureId end
-            m.Scale = Vector3.new(scaleX, scaleY, scaleZ)
-            m.Parent = p
-
-            local offsetCFrame = CFrame.new(posX, posY, posZ) * CFrame.Angles(
-                math.rad(rotX), math.rad(rotY), math.rad(rotZ)
-            )
-
-            local w = Instance.new("Weld")
-            w.Part0 = rootPart
-            w.Part1 = p
-            w.C0 = offsetCFrame
-            w.Parent = p
-        end
-    end
-    
-    print("🚗 Custom Mesh aplicada com sucesso sobre o carro do jogo!")
-end
-
----------------------------------------------------------------------
--- INTERFACE GRÁFICA (UI FLUTUANTE COM MINIMIZAR)
----------------------------------------------------------------------
-local screenGui = PlayerGui:FindFirstChild("CarSkinChangerUI") or Instance.new("ScreenGui")
-screenGui.Name = "CarSkinChangerUI"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = PlayerGui
-
-for _, c in ipairs(screenGui:GetChildren()) do c:Destroy() end
-
-local fullSize = UDim2.new(0, 320, 0, 460)
-local miniSize = UDim2.new(0, 320, 0, 32)
-local isMinimized = false
-
-local frame = Instance.new("Frame")
-frame.Size = fullSize
-frame.Position = UDim2.new(0.02, 0, 0.1, 0)
-frame.BackgroundColor3 = Color3.fromRGB(20, 25, 30)
-frame.BorderSizePixel = 0
-frame.Active = true
-frame.Draggable = true
-frame.ClipsDescendants = true
-frame.Parent = screenGui
-
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 8)
-corner.Parent = frame
-
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 32)
-title.BackgroundColor3 = Color3.fromRGB(35, 45, 55)
-title.Text = "🚗 BODY-SWAP CAR MESH"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.Font = Enum.Font.SourceSansBold
-title.TextSize = 15
-title.Parent = frame
-
--- BOTÃO DE MINIMIZAR (-)
-local minBtn = Instance.new("TextButton")
-minBtn.Size = UDim2.new(0, 24, 0, 24)
-minBtn.Position = UDim2.new(1, -28, 0, 4)
-minBtn.Text = "-"
-minBtn.BackgroundColor3 = Color3.fromRGB(60, 70, 85)
-minBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-minBtn.Font = Enum.Font.SourceSansBold
-minBtn.TextSize = 18
-minBtn.ZIndex = 5
-minBtn.Parent = frame
-
-local minCorner = Instance.new("UICorner")
-minCorner.CornerRadius = UDim.new(0, 4)
-minCorner.Parent = minBtn
-
-local scroll = Instance.new("ScrollingFrame")
-scroll.Size = UDim2.new(1, 0, 1, -32)
-scroll.Position = UDim2.new(0, 0, 0, 32)
-scroll.BackgroundTransparency = 1
-scroll.CanvasSize = UDim2.new(0, 0, 0, 620)
-scroll.ScrollBarThickness = 6
-scroll.Parent = frame
-
-minBtn.MouseButton1Click:Connect(function()
-    isMinimized = not isMinimized
-    if isMinimized then
-        scroll.Visible = false
-        frame.Size = miniSize
-        minBtn.Text = "+"
-    else
-        scroll.Visible = true
-        frame.Size = fullSize
-        minBtn.Text = "-"
-    end
+-- Lógica para Minimizar
+BotaoFechar.MouseButton1Click:Connect(function()
+	-- Faz a bolinha aparecer exatamente onde o menu estava
+	Bolinha.Position = UDim2.new(0, Frame.AbsolutePosition.X + 87, 0, Frame.AbsolutePosition.Y + 10)
+	Frame.Visible = false
+	Bolinha.Visible = true
 end)
 
--- CAMPO DE STRING
-local boxTitle = Instance.new("TextLabel")
-boxTitle.Size = UDim2.new(0.9, 0, 0, 20)
-boxTitle.Position = UDim2.new(0.05, 0, 0.02, 0)
-boxTitle.Text = "Cole a String da Custom Mesh:"
-boxTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
-boxTitle.BackgroundTransparency = 1
-boxTitle.Font = Enum.Font.SourceSans
-boxTitle.TextXAlignment = Enum.TextXAlignment.Left
-boxTitle.Parent = scroll
-
-local textBox = Instance.new("TextBox")
-textBox.Size = UDim2.new(0.9, 0, 0, 28)
-textBox.Position = UDim2.new(0.05, 0, 0.06, 0)
-textBox.PlaceholderText = "Cole a string aqui..."
-textBox.Text = ""
-textBox.ClearTextOnFocus = false
-textBox.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-textBox.Font = Enum.Font.SourceSans
-textBox.TextSize = 12
-textBox.Parent = scroll
-
-local btnLoad = Instance.new("TextButton")
-btnLoad.Size = UDim2.new(0.9, 0, 0, 28)
-btnLoad.Position = UDim2.new(0.05, 0, 0.12, 0)
-btnLoad.Text = "🚗 APLICAR NO CARRO ATUAL"
-btnLoad.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-btnLoad.TextColor3 = Color3.fromRGB(255, 255, 255)
-btnLoad.Font = Enum.Font.SourceSansBold
-btnLoad.Parent = scroll
-
-btnLoad.MouseButton1Click:Connect(function()
-    if textBox.Text ~= "" then
-        currentCarData = textBox.Text
-        applyCustomMeshToCar(currentConfigData or currentCarData)
-    end
+-- Lógica para Maximizar (Abrir de volta) sem atrapalhar o arrastar
+local tempoClique = 0
+Bolinha.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		tempoClique = tick() -- Marca a hora que tocou
+	end
 end)
 
--- CRIADOR DE LINHAS DE CONTROLE
-local function addSectionHeader(text, topPosY)
-    local h = Instance.new("TextLabel")
-    h.Size = UDim2.new(0.9, 0, 0, 22)
-    h.Position = UDim2.new(0.05, 0, topPosY, 0)
-    h.Text = "--- " .. text .. " ---"
-    h.TextColor3 = Color3.fromRGB(0, 200, 255)
-    h.BackgroundTransparency = 1
-    h.Font = Enum.Font.SourceSansBold
-    h.TextSize = 14
-    h.Parent = scroll
+Bolinha.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		-- Se tocou rápido (menos de 0.2 segundos), ele abre o menu. Se demorou, foi porque arrastou!
+		if tick() - tempoClique < 0.2 then
+			Frame.Visible = true
+			Bolinha.Visible = false
+		end
+	end
+end)
+
+
+-- ==========================================
+-- SISTEMA DE ROLAGEM E INPUTS (Scroll)
+-- ==========================================
+local Scroll = Instance.new("ScrollingFrame")
+Scroll.Size = UDim2.new(1, 0, 1, -45)
+Scroll.Position = UDim2.new(0, 0, 0, 40)
+Scroll.BackgroundTransparency = 1
+Scroll.BorderSizePixel = 0
+Scroll.ScrollBarThickness = 4
+Scroll.CanvasSize = UDim2.new(0, 0, 0, 350)
+Scroll.Parent = Frame
+
+local function criarInput(nome, placeholder, posY)
+	local TextBox = Instance.new("TextBox")
+	TextBox.Name = nome
+	TextBox.Size = UDim2.new(0, 180, 0, 35)
+	TextBox.Position = UDim2.new(0.5, -90, 0, posY)
+	TextBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+	TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	TextBox.PlaceholderText = placeholder
+	TextBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+	TextBox.Font = Enum.Font.Gotham
+	TextBox.TextSize = 12
+	TextBox.Text = ""
+	TextBox.Parent = Scroll
+	
+	local Corner = Instance.new("UICorner")
+	Corner.CornerRadius = UDim.new(0, 5)
+	Corner.Parent = TextBox
+	return TextBox
 end
 
-local function createControlRow(label, topPosY, targetTable, key, step, isRot)
-    local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(0.4, 0, 0, 22)
-    lbl.Position = UDim2.new(0.05, 0, topPosY, 0)
-    lbl.Text = label .. ":"
-    lbl.TextColor3 = Color3.fromRGB(220, 220, 220)
-    lbl.BackgroundTransparency = 1
-    lbl.Font = Enum.Font.SourceSans
-    lbl.TextSize = 13
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.Parent = scroll
+local inputId = criarInput("InputID", "ID (Ex: 12345)", 5)
+local inputX = criarInput("InputX", "Tam X (Ex: 6)", 45)
+local inputY = criarInput("InputY", "Tam Y (Ex: 0.1)", 85)
+local inputZ = criarInput("InputZ", "Tam Z (Ex: 6)", 125)
 
-    local btnM = Instance.new("TextButton")
-    btnM.Size = UDim2.new(0, 35, 0, 22)
-    btnM.Position = UDim2.new(0.48, 0, topPosY, 0)
-    btnM.Text = "-" .. step
-    btnM.BackgroundColor3 = Color3.fromRGB(160, 50, 50)
-    btnM.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btnM.Font = Enum.Font.SourceSansBold
-    btnM.Parent = scroll
+local inputPosX = criarInput("InputPosX", "Posição X (Lados): 0", 175)
+local inputPosY = criarInput("InputPosY", "Posição Y (Altura): 0", 215)
+local inputPosZ = criarInput("InputPosZ", "Posição Z (Frente): 0", 255)
 
-    local btnP = Instance.new("TextButton")
-    btnP.Size = UDim2.new(0, 35, 0, 22)
-    btnP.Position = UDim2.new(0.62, 0, topPosY, 0)
-    btnP.Text = "+" .. step
-    btnP.BackgroundColor3 = Color3.fromRGB(50, 160, 50)
-    btnP.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btnP.Font = Enum.Font.SourceSansBold
-    btnP.Parent = scroll
+local BotaoAplicar = Instance.new("TextButton")
+BotaoAplicar.Size = UDim2.new(0, 180, 0, 35)
+BotaoAplicar.Position = UDim2.new(0.5, -90, 0, 305)
+BotaoAplicar.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+BotaoAplicar.TextColor3 = Color3.fromRGB(255, 255, 255)
+BotaoAplicar.Font = Enum.Font.GothamBold
+BotaoAplicar.Text = "Aplicar Glow"
+BotaoAplicar.TextSize = 14
+BotaoAplicar.Parent = Scroll
 
-    local val = Instance.new("TextLabel")
-    val.Size = UDim2.new(0, 45, 0, 22)
-    val.Position = UDim2.new(0.76, 0, topPosY, 0)
-    val.Text = "0"
-    val.TextColor3 = Color3.fromRGB(255, 255, 255)
-    val.BackgroundTransparency = 1
-    val.Font = Enum.Font.SourceSansBold
-    val.Parent = scroll
+local BtnCorner = Instance.new("UICorner")
+BtnCorner.CornerRadius = UDim.new(0, 5)
+BtnCorner.Parent = BotaoAplicar
 
-    local function modify(dir)
-        targetTable[key] = math.floor((targetTable[key] + (dir * step)) * 100) / 100
-        val.Text = tostring(targetTable[key]) .. (isRot and "°" or "")
-        updateMeshTransform()
-    end
+-- ==========================================
+-- SISTEMA PARA ARRASTAR (DRAGGABLE)
+-- ==========================================
+-- Lógica para arrastar o Painel Principal (Segurando o Título)
+local dragging, dragInput, dragStart, startPos
 
-    btnM.MouseButton1Click:Connect(function() modify(-1) end)
-    btnP.MouseButton1Click:Connect(function() modify(1) end)
-end
+Titulo.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = Frame.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then dragging = false end
+		end)
+	end
+end)
 
--- SEÇÕES DE AJUSTE DA MESH SOBRE O CARRO
-addSectionHeader("AJUSTE DE POSIÇÃO DA MESH", 0.20)
-createControlRow("Lado (X)",    0.25, meshOffset, "X", 0.2, false)
-createControlRow("Altura (Y)",  0.30, meshOffset, "Y", 0.2, false)
-createContextRow = createControlRow
-createControlRow("Frente (Z)",  0.35, meshOffset, "Z", 0.2, false)
+Titulo.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
 
-addSectionHeader("AJUSTE DE ROTAÇÃO DA MESH", 0.43)
-createControlRow("Inclinção (Pitch)", 0.48, meshRotation, "Pitch", 5, true)
-createControlRow("Girar (Yaw)",        0.53, meshRotation, "Yaw", 5, true)
-createControlRow("Lado (Roll)",        0.58, meshRotation, "Roll", 5, true)
+-- Lógica para arrastar a Bolinha
+local bolinhaDragging, bolinhaDragInput, bolinhaDragStart, bolinhaStartPos
+Bolinha.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		bolinhaDragging = true
+		bolinhaDragStart = input.Position
+		bolinhaStartPos = Bolinha.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then bolinhaDragging = false end
+		end)
+	end
+end)
+Bolinha.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		bolinhaDragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - dragStart
+		Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+	if input == bolinhaDragInput and bolinhaDragging then
+		local delta = input.Position - bolinhaDragStart
+		Bolinha.Position = UDim2.new(bolinhaStartPos.X.Scale, bolinhaStartPos.X.Offset + delta.X, bolinhaStartPos.Y.Scale, bolinhaStartPos.Y.Offset + delta.Y)
+	end
+end)
+
+-- ==========================================
+-- LÓGICA DO GLOW (IMAGEM)
+-- ==========================================
+BotaoAplicar.MouseButton1Click:Connect(function()
+	local character = player.Character
+	if not character then return end
+	
+	local hrp = character:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+
+	local idDaImagem = inputId.Text:match("%d+")
+	local sizeX = tonumber(inputX.Text) or 6
+	local sizeY = tonumber(inputY.Text) or 0.1
+	local sizeZ = tonumber(inputZ.Text) or 6
+
+	local posX = tonumber(inputPosX.Text) or 0
+	local posY = tonumber(inputPosY.Text) or 0
+	local posZ = tonumber(inputPosZ.Text) or 0
+
+	local velhaAura = character:FindFirstChild("AuraImagemPart")
+	if velhaAura then velhaAura:Destroy() end
+
+	local auraPart = Instance.new("Part")
+	auraPart.Name = "AuraImagemPart"
+	auraPart.Anchored = false
+	auraPart.CanCollide = false
+	auraPart.Massless = true
+	auraPart.Size = Vector3.new(sizeX, sizeY, sizeZ)
+	auraPart.Transparency = 1 
+	
+	local surfaceGui = Instance.new("SurfaceGui")
+	surfaceGui.Name = "ImagemGui"
+	surfaceGui.Face = Enum.NormalId.Top
+	surfaceGui.LightInfluence = 0 
+	surfaceGui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	surfaceGui.PixelsPerStud = 50
+	surfaceGui.Parent = auraPart
+
+	local imageLabel = Instance.new("ImageLabel")
+	imageLabel.Size = UDim2.new(1, 0, 1, 0)
+	imageLabel.BackgroundTransparency = 1 
+	
+	if idDaImagem then
+		imageLabel.Image = "rbxthumb://type=Asset&id=" .. idDaImagem .. "&w=420&h=420"
+	end
+	
+	imageLabel.Parent = surfaceGui
+	
+	local weld = Instance.new("Weld")
+	weld.Part0 = hrp
+	weld.Part1 = auraPart
+	weld.C0 = CFrame.new(posX, -2.9 + posY, posZ) 
+	weld.Parent = auraPart
+	
+	auraPart.Parent = character
+end)
