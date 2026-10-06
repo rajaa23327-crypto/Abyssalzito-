@@ -10,15 +10,22 @@ if uiParent:FindFirstChild("PainelAuraDelta") then
 end
 
 -- ==========================================
--- CRIANDO A INTERFACE (UI)
+-- VARIÁVEIS GLOBAIS PARA EDIÇÃO AO VIVO
+-- ==========================================
+local auraAtual = nil
+local weldAtual = nil
+local luzAtual = nil
+
+-- ==========================================
+-- CRIANDO A INTERFACE (UI) MAIOR
 -- ==========================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "PainelAuraDelta"
 ScreenGui.Parent = uiParent
 
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 220, 0, 300)
-Frame.Position = UDim2.new(0.5, -110, 0.5, -150)
+Frame.Size = UDim2.new(0, 320, 0, 420)
+Frame.Position = UDim2.new(0.5, -160, 0.5, -210)
 Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 Frame.BorderSizePixel = 0
 Frame.Active = true
@@ -31,10 +38,10 @@ UICorner.Parent = Frame
 local Titulo = Instance.new("TextLabel")
 Titulo.Size = UDim2.new(1, 0, 0, 40)
 Titulo.BackgroundTransparency = 1
-Titulo.Text = "Customized Glows (Imagem)"
+Titulo.Text = "Custom Glows & Imagens"
 Titulo.TextColor3 = Color3.fromRGB(0, 150, 255)
 Titulo.Font = Enum.Font.GothamBold
-Titulo.TextSize = 12
+Titulo.TextSize = 14
 Titulo.Parent = Frame
 
 -- ==========================================
@@ -63,7 +70,7 @@ BotaoFechar.TextSize = 14
 BotaoFechar.Parent = Frame
 
 BotaoFechar.MouseButton1Click:Connect(function()
-	Bolinha.Position = UDim2.new(0, Frame.AbsolutePosition.X + 87, 0, Frame.AbsolutePosition.Y + 10)
+	Bolinha.Position = UDim2.new(0, Frame.AbsolutePosition.X + 130, 0, Frame.AbsolutePosition.Y + 10)
 	Frame.Visible = false
 	Bolinha.Visible = true
 end)
@@ -85,66 +92,192 @@ Bolinha.InputEnded:Connect(function(input)
 end)
 
 -- ==========================================
--- SISTEMA DE ROLAGEM E INPUTS
+-- SISTEMA DE ROLAGEM
 -- ==========================================
 local Scroll = Instance.new("ScrollingFrame")
 Scroll.Size = UDim2.new(1, 0, 1, -45)
 Scroll.Position = UDim2.new(0, 0, 0, 40)
 Scroll.BackgroundTransparency = 1
 Scroll.BorderSizePixel = 0
-Scroll.ScrollBarThickness = 3
-Scroll.CanvasSize = UDim2.new(0, 0, 0, 370)
+Scroll.ScrollBarThickness = 4
+Scroll.CanvasSize = UDim2.new(0, 0, 0, 670) -- Tamanho aumentado para caber o brilho e alcance
 Scroll.Parent = Frame
 
-local function criarInput(nome, placeholder, posY)
-	local TextBox = Instance.new("TextBox")
-	TextBox.Name = nome
-	TextBox.Size = UDim2.new(0, 180, 0, 30)
-	TextBox.Position = UDim2.new(0.5, -90, 0, posY)
-	TextBox.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-	TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-	TextBox.PlaceholderText = placeholder
-	TextBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)
-	TextBox.Font = Enum.Font.Gotham
-	TextBox.TextSize = 12
-	TextBox.Text = ""
-	TextBox.Parent = Scroll
+-- ==========================================
+-- FUNÇÕES PARA ATUALIZAÇÃO AO VIVO
+-- ==========================================
+local inputs = {} 
+
+local function atualizarGlowAoVivo()
+	if not auraAtual or not weldAtual then return end
 	
-	local Corner = Instance.new("UICorner")
-	Corner.CornerRadius = UDim.new(0, 4)
-	Corner.Parent = TextBox
-	return TextBox
+	-- Lê os valores atuais
+	local sx = tonumber(inputs["Tam X"].Text) or 10
+	local sy = tonumber(inputs["Tam Y"].Text) or 0.1
+	local sz = tonumber(inputs["Tam Z"].Text) or 15
+	
+	local px = tonumber(inputs["Pos X"].Text) or 0
+	local py = tonumber(inputs["Pos Y"].Text) or -2
+	local pz = tonumber(inputs["Pos Z"].Text) or 0
+	
+	local rx = tonumber(inputs["Rot X"].Text) or 0
+	local ry = tonumber(inputs["Rot Y"].Text) or 0
+	local rz = tonumber(inputs["Rot Z"].Text) or 0
+	
+	local r = tonumber(inputs["Cor R"].Text) or 0
+	local g = tonumber(inputs["Cor G"].Text) or 150
+	local b = tonumber(inputs["Cor B"].Text) or 255
+	
+	local brilho = tonumber(inputs["Brilho"].Text) or 15
+	local alcance = tonumber(inputs["Alcance"].Text) or 12
+
+	-- Aplica tamanho
+	auraAtual.Size = Vector3.new(sx, sy, sz)
+	-- Aplica posição e rotação
+	weldAtual.C0 = CFrame.new(px, py, pz) * CFrame.Angles(math.rad(rx), math.rad(ry), math.rad(rz))
+	
+	-- Aplica cor e intensidade da luz
+	if luzAtual then
+		luzAtual.Color = Color3.fromRGB(r, g, b)
+		luzAtual.Brightness = brilho
+		luzAtual.Range = alcance
+	end
 end
 
-local inputId = criarInput("InputID", "ID da Imagem (Ex: 12345)", 5)
+local function criarInputComBotoes(nome, valorPadrao, posY, passo)
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(0, 60, 0, 30)
+	label.Position = UDim2.new(0, 10, 0, posY)
+	label.BackgroundTransparency = 1
+	label.Text = nome
+	label.TextColor3 = Color3.fromRGB(200, 200, 200)
+	label.Font = Enum.Font.GothamBold
+	label.TextSize = 12
+	label.Parent = Scroll
 
-local inputX = criarInput("InputX", "Tam X (Ex: 10)", 40)
-local inputY = criarInput("InputY", "Tam Y (Ex: 0.1)", 75)
-local inputZ = criarInput("InputZ", "Tam Z (Ex: 15)", 110)
+	local btnMenos = Instance.new("TextButton")
+	btnMenos.Size = UDim2.new(0, 30, 0, 30)
+	btnMenos.Position = UDim2.new(0, 80, 0, posY)
+	btnMenos.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	btnMenos.Text = "-"
+	btnMenos.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btnMenos.Font = Enum.Font.GothamBold
+	btnMenos.Parent = Scroll
+	Instance.new("UICorner", btnMenos).CornerRadius = UDim.new(0, 4)
 
-local inputPosX = criarInput("InputPosX", "Posição X (Lados): 0", 150)
-local inputPosY = criarInput("InputPosY", "Posição Y (Altura): -2", 185)
-local inputPosZ = criarInput("InputPosZ", "Posição Z (Frente): 0", 220)
+	local txtBox = Instance.new("TextBox")
+	txtBox.Size = UDim2.new(0, 100, 0, 30)
+	txtBox.Position = UDim2.new(0, 115, 0, posY)
+	txtBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	txtBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	txtBox.Text = tostring(valorPadrao)
+	txtBox.Font = Enum.Font.Gotham
+	txtBox.TextSize = 12
+	txtBox.Parent = Scroll
+	Instance.new("UICorner", txtBox).CornerRadius = UDim.new(0, 4)
+	
+	inputs[nome] = txtBox
 
-local inputRotX = criarInput("InputRotX", "Rot X: 0", 260)
-local inputRotY = criarInput("InputRotY", "Rot Y: 0", 295)
-local inputRotZ = criarInput("InputRotZ", "Rot Z: 0", 330)
+	local btnMais = Instance.new("TextButton")
+	btnMais.Size = UDim2.new(0, 30, 0, 30)
+	btnMais.Position = UDim2.new(0, 220, 0, posY)
+	btnMais.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	btnMais.Text = "+"
+	btnMais.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btnMais.Font = Enum.Font.GothamBold
+	btnMais.Parent = Scroll
+	Instance.new("UICorner", btnMais).CornerRadius = UDim.new(0, 4)
 
+	-- Lógica de clique (+ e -)
+	btnMenos.MouseButton1Click:Connect(function()
+		local val = tonumber(txtBox.Text) or valorPadrao
+		txtBox.Text = tostring(val - passo)
+		atualizarGlowAoVivo()
+	end)
+
+	btnMais.MouseButton1Click:Connect(function()
+		local val = tonumber(txtBox.Text) or valorPadrao
+		txtBox.Text = tostring(val + passo)
+		atualizarGlowAoVivo()
+	end)
+
+	-- Lógica de escrita direta
+	txtBox.FocusLost:Connect(function()
+		atualizarGlowAoVivo()
+	end)
+end
+
+-- ==========================================
+-- CONSTRUINDO OS CONTROLOS
+-- ==========================================
+-- ID da Imagem
+local inputId = Instance.new("TextBox")
+inputId.Size = UDim2.new(0, 240, 0, 30)
+inputId.Position = UDim2.new(0, 10, 0, 10)
+inputId.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+inputId.TextColor3 = Color3.fromRGB(255, 255, 255)
+inputId.PlaceholderText = "ID da Imagem (Ex: 12345)"
+inputId.Font = Enum.Font.Gotham
+inputId.TextSize = 12
+inputId.Text = ""
+inputId.Parent = Scroll
+Instance.new("UICorner", inputId).CornerRadius = UDim.new(0, 4)
+
+-- Dimensões
+criarInputComBotoes("Tam X", 10, 50, 0.5)
+criarInputComBotoes("Tam Y", 0.1, 85, 0.1)
+criarInputComBotoes("Tam Z", 15, 120, 0.5)
+
+-- Posições
+criarInputComBotoes("Pos X", 0, 165, 0.5)
+criarInputComBotoes("Pos Y", -2, 200, 0.5)
+criarInputComBotoes("Pos Z", 0, 235, 0.5)
+
+-- Rotações
+criarInputComBotoes("Rot X", 0, 280, 5)
+criarInputComBotoes("Rot Y", 0, 315, 5)
+criarInputComBotoes("Rot Z", 0, 350, 5)
+
+-- RGB (Cor da Luz)
+local lblRGB = Instance.new("TextLabel")
+lblRGB.Size = UDim2.new(1, 0, 0, 20)
+lblRGB.Position = UDim2.new(0, 0, 0, 390)
+lblRGB.BackgroundTransparency = 1
+lblRGB.Text = "Cor do Brilho (RGB)"
+lblRGB.TextColor3 = Color3.fromRGB(0, 150, 255)
+lblRGB.Font = Enum.Font.GothamBold
+lblRGB.TextSize = 12
+lblRGB.Parent = Scroll
+
+criarInputComBotoes("Cor R", 0, 410, 10)
+criarInputComBotoes("Cor G", 150, 445, 10)
+criarInputComBotoes("Cor B", 255, 480, 10)
+
+-- Força da Luz
+local lblLuz = Instance.new("TextLabel")
+lblLuz.Size = UDim2.new(1, 0, 0, 20)
+lblLuz.Position = UDim2.new(0, 0, 0, 515)
+lblLuz.BackgroundTransparency = 1
+lblLuz.Text = "Intensidade da Luz"
+lblLuz.TextColor3 = Color3.fromRGB(0, 150, 255)
+lblLuz.Font = Enum.Font.GothamBold
+lblLuz.TextSize = 12
+lblLuz.Parent = Scroll
+
+criarInputComBotoes("Brilho", 15, 535, 1)
+criarInputComBotoes("Alcance", 12, 570, 1)
+
+-- Botão Principal de Aplicar
 local BotaoAplicar = Instance.new("TextButton")
-BotaoAplicar.Size = UDim2.new(0, 180, 0, 35)
-BotaoAplicar.Position = UDim2.new(0.5, -90, 0, 370)
+BotaoAplicar.Size = UDim2.new(0, 240, 0, 35)
+BotaoAplicar.Position = UDim2.new(0.5, -120, 0, 615)
 BotaoAplicar.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
 BotaoAplicar.TextColor3 = Color3.fromRGB(255, 255, 255)
 BotaoAplicar.Font = Enum.Font.GothamBold
-BotaoAplicar.Text = "Aplicar Imagem"
+BotaoAplicar.Text = "Aplicar Imagem & Luz"
 BotaoAplicar.TextSize = 14
 BotaoAplicar.Parent = Scroll
-
-Scroll.CanvasSize = UDim2.new(0, 0, 0, 420)
-
-local BtnCorner = Instance.new("UICorner")
-BtnCorner.CornerRadius = UDim.new(0, 4)
-BtnCorner.Parent = BotaoAplicar
+Instance.new("UICorner", BotaoAplicar).CornerRadius = UDim.new(0, 4)
 
 -- ==========================================
 -- SISTEMA PARA ARRASTAR (DRAGGABLE)
@@ -166,7 +299,6 @@ Titulo.InputChanged:Connect(function(input)
 		dragInput = input
 	end
 end)
-
 UserInputService.InputChanged:Connect(function(input)
 	if input == dragInput and dragging then
 		local delta = input.Position - dragStart
@@ -175,7 +307,7 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 -- ==========================================
--- LÓGICA DA IMAGEM NO CARRO
+-- LÓGICA DE APLICAÇÃO NO CARRO
 -- ==========================================
 BotaoAplicar.MouseButton1Click:Connect(function()
 	local character = player.Character
@@ -184,30 +316,17 @@ BotaoAplicar.MouseButton1Click:Connect(function()
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	if not humanoid then return end
 
-	-- Trava: Precisa estar sentado no carro
 	if not humanoid.SeatPart then
-		BotaoAplicar.Text = "Sente num carro!"
+		BotaoAplicar.Text = "Senta-te num carro!"
 		task.wait(2)
-		BotaoAplicar.Text = "Aplicar Imagem"
+		BotaoAplicar.Text = "Aplicar Imagem & Luz"
 		return
 	end
 
 	local alvo = humanoid.SeatPart
 	local idDaImagem = inputId.Text:match("%d+")
 
-	local sizeX = tonumber(inputX.Text) or 10
-	local sizeY = tonumber(inputY.Text) or 0.1
-	local sizeZ = tonumber(inputZ.Text) or 15
-
-	local posX = tonumber(inputPosX.Text) or 0
-	local posY = tonumber(inputPosY.Text) or -2
-	local posZ = tonumber(inputPosZ.Text) or 0
-	
-	local rotX = tonumber(inputRotX.Text) or 0
-	local rotY = tonumber(inputRotY.Text) or 0
-	local rotZ = tonumber(inputRotZ.Text) or 0
-
-	-- Remove aura antiga se houver
+	-- Remove aura antiga
 	local velhaAura = alvo:FindFirstChild("UnderglowImagePart")
 	if velhaAura then velhaAura:Destroy() end
 
@@ -217,17 +336,16 @@ BotaoAplicar.MouseButton1Click:Connect(function()
 	auraPart.Anchored = false
 	auraPart.CanCollide = false
 	auraPart.Massless = true
-	auraPart.Size = Vector3.new(sizeX, sizeY, sizeZ)
 	
-	-- No começo o bloco fica visível (com transparência 0.3) para você poder guiar a posição e o tamanho
+	-- No começo fica visível para ajudar no posicionamento
 	auraPart.Transparency = 0.3 
 	auraPart.Color = Color3.fromRGB(255, 255, 255)
 	
-	-- Cria o SurfaceGui para exibir a imagem no topo do bloco
+	-- SurfaceGui para a Imagem
 	local surfaceGui = Instance.new("SurfaceGui")
 	surfaceGui.Name = "ImagemGui"
 	surfaceGui.Face = Enum.NormalId.Top
-	surfaceGui.LightInfluence = 1 -- Deixa a imagem receber luz normal do jogo
+	surfaceGui.LightInfluence = 1
 	surfaceGui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
 	surfaceGui.PixelsPerStud = 50
 	surfaceGui.Parent = auraPart
@@ -235,34 +353,43 @@ BotaoAplicar.MouseButton1Click:Connect(function()
 	local imageLabel = Instance.new("ImageLabel")
 	imageLabel.Size = UDim2.new(1, 0, 1, 0)
 	imageLabel.BackgroundTransparency = 1 
-	
 	if idDaImagem then
 		imageLabel.Image = "rbxthumb://type=Asset&id=" .. idDaImagem .. "&w=420&h=420"
 	end
-	
 	imageLabel.Parent = surfaceGui
-	
-	-- Solda a parte no carro com os devidos ajustes de Posição e Rotação
+
+	-- ===== LUZ SUPER FORTE =====
+	local luzGlow = Instance.new("SurfaceLight")
+	luzGlow.Name = "LuzUnderglow"
+	luzGlow.Face = Enum.NormalId.Bottom -- Emite luz para o chão
+	luzGlow.Angle = 120
+	luzGlow.Parent = auraPart
+
+	-- Solda a peça no carro
 	local weld = Instance.new("Weld")
 	weld.Part0 = alvo
 	weld.Part1 = auraPart
-	weld.C0 = CFrame.new(posX, posY, posZ) * CFrame.Angles(math.rad(rotX), math.rad(rotY), math.rad(rotZ))
-	
 	weld.Parent = auraPart
+	
 	auraPart.Parent = alvo
 	
-	BotaoAplicar.Text = "Aplicado!"
+	-- Define variáveis globais para a edição ao vivo funcionar
+	auraAtual = auraPart
+	weldAtual = weld
+	luzAtual = luzGlow
+
+	-- Aplica imediatamente os valores que estão na UI (Cor, Brilho, Alcance)
+	atualizarGlowAoVivo()
 	
-	-- ===== MÁGICA: O BLOCO SOME DEPOIS DE 3 SEGUNDOS =====
+	BotaoAplicar.Text = "Aplicado com Sucesso!"
+	
+	-- Mágica do desaparecimento da caixa física
 	task.spawn(function()
-		task.wait(3) -- Deixa visível por 3 segundos para você mexer e ajustar o X, Y, Z
-		
-		-- O bloco fica 100% invisível, mas a imagem continua aparecendo perfeitamente!
+		task.wait(3)
 		local fade = TweenService:Create(auraPart, TweenInfo.new(1.5), {Transparency = 1})
 		fade:Play()
 	end)
-	-- ====================================================
 
 	task.wait(1.5)
-	BotaoAplicar.Text = "Aplicar Imagem"
+	BotaoAplicar.Text = "Aplicar Imagem & Luz"
 end)
