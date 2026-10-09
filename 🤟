@@ -1,395 +1,551 @@
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
+--[[
+	â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+	  CUSTOM GLOWS & IMAGENS  â€¢  v5.0
+	  UnderGlow Studio  â€¢  Presets compartilhados + Dono
+	  âœ¨ CrÃ©ditos: ABYSSAL
+	â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+--]]
+
+-- â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+-- â•‘  CONFIGURAÃ‡ÃƒO â€” COLE SUA URL DO FIREBASE AQUI            â•‘
+-- â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+local CONFIG = {
+	FIREBASE_URL = "",  -- ex: "https://meu-projeto-default-rtdb.firebaseio.com"
+	-- Se vazio, os presets ficam sÃ³ na sua sessÃ£o (nÃ£o compartilham)
+	PULAR_SPLASH = false, -- true = pula a tela de crÃ©ditos
+}
+
+--==========================================
+-- ðŸŽ¬ SPLASH DE CRÃ‰DITOS â€” ABYSSAL
+--==========================================
+if not CONFIG.PULAR_SPLASH then
+	local ok = pcall(function()
+		local TS = game:GetService("TweenService")
+
+		local function novo_(cls, props, parent)
+			local i = Instance.new(cls)
+			if props then for k,v in pairs(props) do i[k]=v end end
+			if parent then i.Parent = parent end
+			return i
+		end
+		local function cantos_(i, r) return novo_("UICorner", {CornerRadius=UDim.new(0, r or 6)}, i) end
+		local function grad_(i, c1, c2, rot)
+			return novo_("UIGradient", {Color=ColorSequence.new(c1,c2), Rotation=rot or 0}, i)
+		end
+		local function stroke_(i, cor, esp, tr)
+			return novo_("UIStroke", {Color=cor, Thickness=esp or 1, Transparency=tr or 0}, i)
+		end
+
+		local parentUI
+		if gethui then
+			local ok2, r = pcall(gethui)
+			if ok2 and r then parentUI = r end
+		end
+		parentUI = parentUI or game:GetService("CoreGui")
+
+		local oldSplash = parentUI:FindFirstChild("AbyssalSplash")
+		if oldSplash then oldSplash:Destroy() end
+
+		local SplashGui = novo_("ScreenGui", {
+			Name = "AbyssalSplash",
+			ResetOnSpawn = false,
+			IgnoreGuiInset = true,
+			ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+			DisplayOrder = 999,
+			Parent = parentUI,
+		})
+
+		local Bg = novo_("Frame", {
+			Size = UDim2.new(1,0,1,0),
+			BackgroundColor3 = Color3.fromRGB(8,8,12),
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Parent = SplashGui,
+		})
+
+		local Center = novo_("Frame", {
+			Size = UDim2.new(0, 340, 0, 200),
+			Position = UDim2.new(0.5, -170, 0.5, -100),
+			BackgroundColor3 = Color3.fromRGB(18,18,24),
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Parent = Bg,
+		})
+		cantos_(Center, 18)
+		local centerStroke = stroke_(Center, Color3.fromRGB(0,170,255), 1.5, 0.4)
+
+		local glow = novo_("Frame", {
+			Size = UDim2.new(1, 20, 1, 20),
+			Position = UDim2.new(0, -10, 0, -10),
+			BackgroundColor3 = Color3.fromRGB(0,170,255),
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			ZIndex = 0,
+			Parent = Center,
+		})
+		cantos_(glow, 24)
+
+		local IconBox = novo_("Frame", {
+			Size = UDim2.new(0, 60, 0, 60),
+			Position = UDim2.new(0.5, -30, 0, 22),
+			BackgroundColor3 = Color3.fromRGB(0,170,255),
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Parent = Center,
+		})
+		cantos_(IconBox, 16)
+		grad_(IconBox, Color3.fromRGB(0,170,255), Color3.fromRGB(130,70,255), 45)
+		stroke_(IconBox, Color3.fromRGB(255,255,255), 2, 0.7)
+
+		local IconTxt = novo_("TextLabel", {
+			Size = UDim2.new(1,0,1,0),
+			BackgroundTransparency = 1,
+			Text = "âœ¨",
+			TextSize = 30,
+			Font = Enum.Font.GothamBold,
+			TextColor3 = Color3.fromRGB(255,255,255),
+			TextTransparency = 1,
+			Parent = IconBox,
+		})
+
+		local Apresenta = novo_("TextLabel", {
+			Size = UDim2.new(1,0,0,14),
+			Position = UDim2.new(0,0,0,92),
+			BackgroundTransparency = 1,
+			Text = "APRESENTA",
+			TextColor3 = Color3.fromRGB(140,140,160),
+			TextTransparency = 1,
+			Font = Enum.Font.GothamMedium,
+			TextSize = 10,
+			Parent = Center,
+		})
+
+		local NomeLbl = novo_("TextLabel", {
+			Size = UDim2.new(1,0,0,44),
+			Position = UDim2.new(0,0,0,106),
+			BackgroundTransparency = 1,
+			Text = "ABYSSAL",
+			TextColor3 = Color3.fromRGB(255,255,255),
+			TextTransparency = 1,
+			Font = Enum.Font.GothamBold,
+			TextSize = 34,
+			Parent = Center,
+		})
+		grad_(NomeLbl, Color3.fromRGB(0,170,255), Color3.fromRGB(180,90,255), 0)
+
+		local Subtitulo = novo_("TextLabel", {
+			Size = UDim2.new(1,0,0,16),
+			Position = UDim2.new(0,0,0,148),
+			BackgroundTransparency = 1,
+			Text = "UnderGlow Studio  â€¢  v5.0",
+			TextColor3 = Color3.fromRGB(140,140,160),
+			TextTransparency = 1,
+			Font = Enum.Font.Gotham,
+			TextSize = 11,
+			Parent = Center,
+		})
+
+		local BarBg = novo_("Frame", {
+			Size = UDim2.new(0, 240, 0, 4),
+			Position = UDim2.new(0.5, -120, 0, 174),
+			BackgroundColor3 = Color3.fromRGB(40,40,50),
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Parent = Center,
+		})
+		cantos_(BarBg, 2)
+
+		local BarFill = novo_("Frame", {
+			Size = UDim2.new(0, 0, 1, 0),
+			BackgroundColor3 = Color3.fromRGB(0,170,255),
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Parent = BarBg,
+		})
+		cantos_(BarFill, 2)
+		grad_(BarFill, Color3.fromRGB(0,170,255), Color3.fromRGB(180,90,255), 0)
+
+		-- ANIMAÃ‡ÃƒO
+		TS:Create(Bg, TweenInfo.new(0.4), {BackgroundTransparency = 0.15}):Play()
+		task.wait(0.15)
+
+		TS:Create(Center, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			BackgroundTransparency = 0,
+		}):Play()
+		TS:Create(centerStroke, TweenInfo.new(0.6), {Transparency = 0.2}):Play()
+
+		task.spawn(function()
+			for i = 1, 3 do
+				TS:Create(glow, TweenInfo.new(0.6), {BackgroundTransparency = 0.85}):Play()
+				task.wait(0.6)
+				TS:Create(glow, TweenInfo.new(0.6), {BackgroundTransparency = 1}):Play()
+				task.wait(0.6)
+			end
+		end)
+
+		task.wait(0.1)
+		TS:Create(IconBox, TweenInfo.new(0.4), {BackgroundTransparency = 0}):Play()
+		TS:Create(IconTxt, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
+
+		task.wait(0.2)
+		TS:Create(Apresenta, TweenInfo.new(0.35), {TextTransparency = 0}):Play()
+		task.wait(0.15)
+		TS:Create(NomeLbl, TweenInfo.new(0.45), {TextTransparency = 0}):Play()
+		task.wait(0.15)
+		TS:Create(Subtitulo, TweenInfo.new(0.35), {TextTransparency = 0}):Play()
+
+		task.wait(0.25)
+		TS:Create(BarBg, TweenInfo.new(0.3), {BackgroundTransparency = 0}):Play()
+		TS:Create(BarFill, TweenInfo.new(0.3), {BackgroundTransparency = 0}):Play()
+		TS:Create(BarFill, TweenInfo.new(1.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = UDim2.new(1, 0, 1, 0),
+		}):Play()
+
+		task.wait(1.9)
+
+		TS:Create(Center, TweenInfo.new(0.5), {
+			BackgroundTransparency = 1,
+			Position = UDim2.new(0.5, -170, 0.5, -130),
+		}):Play()
+		TS:Create(centerStroke, TweenInfo.new(0.5), {Transparency = 1}):Play()
+		TS:Create(IconBox, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+		TS:Create(IconTxt, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+		TS:Create(Apresenta, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+		TS:Create(NomeLbl, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+		TS:Create(Subtitulo, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+		TS:Create(BarBg, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+		TS:Create(BarFill, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+
+		local fadeBg = TS:Create(Bg, TweenInfo.new(0.5), {BackgroundTransparency = 1})
+		fadeBg:Play()
+		fadeBg.Completed:Wait()
+
+		SplashGui:Destroy()
+	end)
+	-- Se algo falhar no splash, ignora e continua
+end
+
+--==========================================
+-- SERVIÃ‡OS
+--==========================================
+local Players      = game:GetService("Players")
+local UIS          = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local RunService   = game:GetService("RunService")
+local HttpService  = game:GetService("HttpService")
+
 local player = Players.LocalPlayer
 
-local uiParent = (gethui and gethui()) or game:GetService("CoreGui")
+local function obterUIParent()
+	if gethui then
+		local ok, r = pcall(gethui)
+		if ok and r then return r end
+	end
+	return game:GetService("CoreGui")
+end
+local uiParent = obterUIParent()
 
-if uiParent:FindFirstChild("PainelAuraDelta") then
-	uiParent.PainelAuraDelta:Destroy()
+do
+	local antigo = uiParent:FindFirstChild("PainelAuraDelta")
+	if antigo then antigo:Destroy() end
 end
 
--- ==========================================
--- VARIÁVEIS GLOBAIS PARA EDIÇÃO AO VIVO
--- ==========================================
-local auraAtual = nil
-local weldAtual = nil
-local luzAtual = nil
+local C = {
+	bg = Color3.fromRGB(14,14,18), panel = Color3.fromRGB(22,22,28),
+	card = Color3.fromRGB(30,30,38), input = Color3.fromRGB(40,40,50),
+	accent = Color3.fromRGB(0,170,255), accent2 = Color3.fromRGB(130,70,255),
+	text = Color3.fromRGB(235,235,240), textDim = Color3.fromRGB(140,140,160),
+	success = Color3.fromRGB(60,210,130), danger = Color3.fromRGB(235,70,90),
+	warn = Color3.fromRGB(245,180,60), gold = Color3.fromRGB(255,190,60),
+	border = Color3.fromRGB(48,48,60),
+}
 
--- ==========================================
--- CRIANDO A INTERFACE (UI) MAIOR
--- ==========================================
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "PainelAuraDelta"
-ScreenGui.Parent = uiParent
+local State = {
+	imgId = "",
+	sx = 10, sy = 0.15, sz = 15,
+	px = 0, py = -1.8, pz = 0,
+	rx = 0, ry = 0, rz = 0,
+	transp = 1,
+	cr = 0, cg = 180, cb = 255,
+	bright = 4, range = 16, angle = 120,
+	mostrarCaixa = false,
+	pulse = false, rainbow = false, spin = false,
+	part = nil, weld = nil, light = nil, imgLabel = nil,
+	baseRot = CFrame.new(),
+	spinAngle = 0, tempo = 0,
+	minimizado = false, escondido = false,
+}
 
-local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 320, 0, 420)
-Frame.Position = UDim2.new(0.5, -160, 0.5, -210)
-Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-Frame.BorderSizePixel = 0
-Frame.Active = true
-Frame.Parent = ScreenGui
+local render
+local W = {}
+local PresetsCache = {}
+local atualizarLista, sincronizarPresets
 
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 8)
-UICorner.Parent = Frame
-
-local Titulo = Instance.new("TextLabel")
-Titulo.Size = UDim2.new(1, 0, 0, 40)
-Titulo.BackgroundTransparency = 1
-Titulo.Text = "Custom Glows & Imagens"
-Titulo.TextColor3 = Color3.fromRGB(0, 150, 255)
-Titulo.Font = Enum.Font.GothamBold
-Titulo.TextSize = 14
-Titulo.Parent = Frame
-
--- ==========================================
--- BOTÃO DE MINIMIZAR (BOLINHA)
--- ==========================================
-local Bolinha = Instance.new("TextButton")
-Bolinha.Size = UDim2.new(0, 45, 0, 45)
-Bolinha.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-Bolinha.Text = "🚗"
-Bolinha.TextSize = 20
-Bolinha.Visible = false
-Bolinha.Parent = ScreenGui
-
-local BolinhaCorner = Instance.new("UICorner")
-BolinhaCorner.CornerRadius = UDim.new(1, 0)
-BolinhaCorner.Parent = Bolinha
-
-local BotaoFechar = Instance.new("TextButton")
-BotaoFechar.Size = UDim2.new(0, 30, 0, 30)
-BotaoFechar.Position = UDim2.new(1, -35, 0, 5)
-BotaoFechar.BackgroundTransparency = 1
-BotaoFechar.Text = "X"
-BotaoFechar.TextColor3 = Color3.fromRGB(255, 255, 255)
-BotaoFechar.Font = Enum.Font.GothamBold
-BotaoFechar.TextSize = 14
-BotaoFechar.Parent = Frame
-
-BotaoFechar.MouseButton1Click:Connect(function()
-	Bolinha.Position = UDim2.new(0, Frame.AbsolutePosition.X + 130, 0, Frame.AbsolutePosition.Y + 10)
-	Frame.Visible = false
-	Bolinha.Visible = true
-end)
-
-local tempoClique = 0
-Bolinha.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		tempoClique = tick()
-	end
-end)
-
-Bolinha.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		if tick() - tempoClique < 0.2 then
-			Frame.Visible = true
-			Bolinha.Visible = false
-		end
-	end
-end)
-
--- ==========================================
--- SISTEMA DE ROLAGEM
--- ==========================================
-local Scroll = Instance.new("ScrollingFrame")
-Scroll.Size = UDim2.new(1, 0, 1, -45)
-Scroll.Position = UDim2.new(0, 0, 0, 40)
-Scroll.BackgroundTransparency = 1
-Scroll.BorderSizePixel = 0
-Scroll.ScrollBarThickness = 4
-Scroll.CanvasSize = UDim2.new(0, 0, 0, 670) -- Tamanho aumentado para caber o brilho e alcance
-Scroll.Parent = Frame
-
--- ==========================================
--- FUNÇÕES PARA ATUALIZAÇÃO AO VIVO
--- ==========================================
-local inputs = {} 
-
-local function atualizarGlowAoVivo()
-	if not auraAtual or not weldAtual then return end
-	
-	-- Lê os valores atuais
-	local sx = tonumber(inputs["Tam X"].Text) or 10
-	local sy = tonumber(inputs["Tam Y"].Text) or 0.1
-	local sz = tonumber(inputs["Tam Z"].Text) or 15
-	
-	local px = tonumber(inputs["Pos X"].Text) or 0
-	local py = tonumber(inputs["Pos Y"].Text) or -2
-	local pz = tonumber(inputs["Pos Z"].Text) or 0
-	
-	local rx = tonumber(inputs["Rot X"].Text) or 0
-	local ry = tonumber(inputs["Rot Y"].Text) or 0
-	local rz = tonumber(inputs["Rot Z"].Text) or 0
-	
-	local r = tonumber(inputs["Cor R"].Text) or 0
-	local g = tonumber(inputs["Cor G"].Text) or 150
-	local b = tonumber(inputs["Cor B"].Text) or 255
-	
-	local brilho = tonumber(inputs["Brilho"].Text) or 15
-	local alcance = tonumber(inputs["Alcance"].Text) or 12
-
-	-- Aplica tamanho
-	auraAtual.Size = Vector3.new(sx, sy, sz)
-	-- Aplica posição e rotação
-	weldAtual.C0 = CFrame.new(px, py, pz) * CFrame.Angles(math.rad(rx), math.rad(ry), math.rad(rz))
-	
-	-- Aplica cor e intensidade da luz
-	if luzAtual then
-		luzAtual.Color = Color3.fromRGB(r, g, b)
-		luzAtual.Brightness = brilho
-		luzAtual.Range = alcance
-	end
+--==========================================
+-- HTTP HELPER
+--==========================================
+local httpReq
+do
+	httpReq = (syn and syn.request)
+		or (http and http.request)
+		or http_request
+		or (fluxus and fluxus.request)
+		or (request)
 end
 
-local function criarInputComBotoes(nome, valorPadrao, posY, passo)
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(0, 60, 0, 30)
-	label.Position = UDim2.new(0, 10, 0, posY)
-	label.BackgroundTransparency = 1
-	label.Text = nome
-	label.TextColor3 = Color3.fromRGB(200, 200, 200)
-	label.Font = Enum.Font.GothamBold
-	label.TextSize = 12
-	label.Parent = Scroll
-
-	local btnMenos = Instance.new("TextButton")
-	btnMenos.Size = UDim2.new(0, 30, 0, 30)
-	btnMenos.Position = UDim2.new(0, 80, 0, posY)
-	btnMenos.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-	btnMenos.Text = "-"
-	btnMenos.TextColor3 = Color3.fromRGB(255, 255, 255)
-	btnMenos.Font = Enum.Font.GothamBold
-	btnMenos.Parent = Scroll
-	Instance.new("UICorner", btnMenos).CornerRadius = UDim.new(0, 4)
-
-	local txtBox = Instance.new("TextBox")
-	txtBox.Size = UDim2.new(0, 100, 0, 30)
-	txtBox.Position = UDim2.new(0, 115, 0, posY)
-	txtBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	txtBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-	txtBox.Text = tostring(valorPadrao)
-	txtBox.Font = Enum.Font.Gotham
-	txtBox.TextSize = 12
-	txtBox.Parent = Scroll
-	Instance.new("UICorner", txtBox).CornerRadius = UDim.new(0, 4)
-	
-	inputs[nome] = txtBox
-
-	local btnMais = Instance.new("TextButton")
-	btnMais.Size = UDim2.new(0, 30, 0, 30)
-	btnMais.Position = UDim2.new(0, 220, 0, posY)
-	btnMais.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-	btnMais.Text = "+"
-	btnMais.TextColor3 = Color3.fromRGB(255, 255, 255)
-	btnMais.Font = Enum.Font.GothamBold
-	btnMais.Parent = Scroll
-	Instance.new("UICorner", btnMais).CornerRadius = UDim.new(0, 4)
-
-	-- Lógica de clique (+ e -)
-	btnMenos.MouseButton1Click:Connect(function()
-		local val = tonumber(txtBox.Text) or valorPadrao
-		txtBox.Text = tostring(val - passo)
-		atualizarGlowAoVivo()
+local function http(method, url, body)
+	if not httpReq then return nil end
+	local ok, resp = pcall(function()
+		return httpReq({
+			Url = url, Method = method, Body = body,
+			Headers = { ["Content-Type"] = "application/json" },
+		})
 	end)
+	if not ok then return nil end
+	return resp
+end
 
-	btnMais.MouseButton1Click:Connect(function()
-		local val = tonumber(txtBox.Text) or valorPadrao
-		txtBox.Text = tostring(val + passo)
-		atualizarGlowAoVivo()
-	end)
+local function firebaseDisponivel()
+	return CONFIG.FIREBASE_URL ~= ""
+		and CONFIG.FIREBASE_URL ~= nil
+		and httpReq ~= nil
+end
 
-	-- Lógica de escrita direta
-	txtBox.FocusLost:Connect(function()
-		atualizarGlowAoVivo()
+--==========================================
+-- HELPERS UI
+--==========================================
+local function novo(classe, props, parent)
+	local i = Instance.new(classe)
+	if props then for k,v in pairs(props) do i[k] = v end end
+	if parent then i.Parent = parent end
+	return i
+end
+local function cantos(i, r) return novo("UICorner", {CornerRadius = UDim.new(0, r or 6)}, i) end
+local function gradiente(i, c1, c2, rot)
+	return novo("UIGradient", {Color = ColorSequence.new(c1,c2), Rotation = rot or 0}, i)
+end
+local function stroke(i, cor, esp, tr)
+	return novo("UIStroke", {Color=cor or C.border, Thickness=esp or 1, Transparency=tr or 0.4}, i)
+end
+local function fnum(v, step)
+	if step >= 1 then return tostring(math.floor(v + 0.5)) end
+	local s = string.format("%.2f", v):gsub("(%-?%d+%.?%d-)0+$", "%1"):gsub("%.$", "")
+	return s
+end
+
+--==========================================
+-- NOTIFICAÃ‡Ã•ES
+--==========================================
+local NotifContainer
+local function notificar(msg, cor, dur)
+	cor = cor or C.accent; dur = dur or 2
+	if not NotifContainer then return end
+	local card = novo("Frame", {Size=UDim2.new(1,0,0,34), BackgroundColor3=C.card,
+		BorderSizePixel=0, Parent=NotifContainer})
+	cantos(card, 6); stroke(card, cor, 1, 0.5)
+	novo("Frame", {Size=UDim2.new(0,3,1,0), BackgroundColor3=cor,
+		BorderSizePixel=0, Parent=card})
+	novo("TextLabel", {Size=UDim2.new(1,-20,1,0), Position=UDim2.new(0,14,0,0),
+		BackgroundTransparency=1, Text=msg, TextColor3=C.text,
+		Font=Enum.Font.GothamMedium, TextSize=12, TextXAlignment=Enum.TextXAlignment.Left,
+		TextTruncate=Enum.TextTruncate.AtEnd, Parent=card})
+	card.BackgroundTransparency = 1
+	card.Position = UDim2.new(0,20,0,0)
+	TweenService:Create(card, TweenInfo.new(0.25), {
+		BackgroundTransparency=0, Position=UDim2.new(0,0,0,0)}):Play()
+	task.delay(dur, function()
+		if not card.Parent then return end
+		local t = TweenService:Create(card, TweenInfo.new(0.3),
+			{BackgroundTransparency=1, Position=UDim2.new(0,20,0,0)})
+		t:Play(); t.Completed:Wait(); card:Destroy()
 	end)
 end
 
--- ==========================================
--- CONSTRUINDO OS CONTROLOS
--- ==========================================
--- ID da Imagem
-local inputId = Instance.new("TextBox")
-inputId.Size = UDim2.new(0, 240, 0, 30)
-inputId.Position = UDim2.new(0, 10, 0, 10)
-inputId.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-inputId.TextColor3 = Color3.fromRGB(255, 255, 255)
-inputId.PlaceholderText = "ID da Imagem (Ex: 12345)"
-inputId.Font = Enum.Font.Gotham
-inputId.TextSize = 12
-inputId.Text = ""
-inputId.Parent = Scroll
-Instance.new("UICorner", inputId).CornerRadius = UDim.new(0, 4)
+--==========================================
+-- ROOT
+--==========================================
+local ScreenGui = novo("ScreenGui", {
+	Name="PainelAuraDelta", ResetOnSpawn=false,
+	ZIndexBehavior=Enum.ZIndexBehavior.Sibling,
+	IgnoreGuiInset=true, Parent=uiParent,
+})
 
--- Dimensões
-criarInputComBotoes("Tam X", 10, 50, 0.5)
-criarInputComBotoes("Tam Y", 0.1, 85, 0.1)
-criarInputComBotoes("Tam Z", 15, 120, 0.5)
+NotifContainer = novo("Frame", {Size=UDim2.new(0,260,0,400),
+	Position=UDim2.new(1,-272,1,-300), BackgroundTransparency=1, Parent=ScreenGui})
+novo("UIListLayout", {Padding=UDim.new(0,6),
+	VerticalAlignment=Enum.VerticalAlignment.Bottom,
+	SortOrder=Enum.SortOrder.LayoutOrder}, NotifContainer)
 
--- Posições
-criarInputComBotoes("Pos X", 0, 165, 0.5)
-criarInputComBotoes("Pos Y", -2, 200, 0.5)
-criarInputComBotoes("Pos Z", 0, 235, 0.5)
+local Frame = novo("Frame", {Size=UDim2.new(0,380,0,540),
+	Position=UDim2.new(0.5,-190,0.5,-270),
+	BackgroundColor3=C.bg, BorderSizePixel=0, Active=true, Parent=ScreenGui})
+cantos(Frame, 14); stroke(Frame, C.border, 1, 0.2)
 
--- Rotações
-criarInputComBotoes("Rot X", 0, 280, 5)
-criarInputComBotoes("Rot Y", 0, 315, 5)
-criarInputComBotoes("Rot Z", 0, 350, 5)
+--==========================================
+-- HEADER
+--==========================================
+local Header = novo("Frame", {Size=UDim2.new(1,0,0,56),
+	BackgroundColor3=C.panel, BorderSizePixel=0, Parent=Frame})
+cantos(Header, 14)
+gradiente(Header, C.accent, C.accent2, 15)
+novo("Frame", {Size=UDim2.new(1,0,1,0), BackgroundColor3=C.panel,
+	BackgroundTransparency=0.87, BorderSizePixel=0, Parent=Header})
+novo("Frame", {Size=UDim2.new(1,0,0,14), Position=UDim2.new(0,0,1,-14),
+	BackgroundColor3=C.panel, BorderSizePixel=0, Parent=Header})
 
--- RGB (Cor da Luz)
-local lblRGB = Instance.new("TextLabel")
-lblRGB.Size = UDim2.new(1, 0, 0, 20)
-lblRGB.Position = UDim2.new(0, 0, 0, 390)
-lblRGB.BackgroundTransparency = 1
-lblRGB.Text = "Cor do Brilho (RGB)"
-lblRGB.TextColor3 = Color3.fromRGB(0, 150, 255)
-lblRGB.Font = Enum.Font.GothamBold
-lblRGB.TextSize = 12
-lblRGB.Parent = Scroll
+local Icon = novo("TextLabel", {Size=UDim2.new(0,36,0,36),
+	Position=UDim2.new(0,12,0.5,-18), BackgroundColor3=C.accent,
+	Text="âœ¨", TextSize=20, Font=Enum.Font.GothamBold,
+	TextColor3=Color3.fromRGB(255,255,255), Parent=Header})
+cantos(Icon, 9); gradiente(Icon, C.accent, C.accent2, 45)
 
-criarInputComBotoes("Cor R", 0, 410, 10)
-criarInputComBotoes("Cor G", 150, 445, 10)
-criarInputComBotoes("Cor B", 255, 480, 10)
+novo("TextLabel", {Size=UDim2.new(1,-160,0,20), Position=UDim2.new(0,58,0,10),
+	BackgroundTransparency=1, Text="Custom Glows & Imagens", TextColor3=C.text,
+	Font=Enum.Font.GothamBold, TextSize=14, TextXAlignment=Enum.TextXAlignment.Left,
+	Parent=Header})
 
--- Força da Luz
-local lblLuz = Instance.new("TextLabel")
-lblLuz.Size = UDim2.new(1, 0, 0, 20)
-lblLuz.Position = UDim2.new(0, 0, 0, 515)
-lblLuz.BackgroundTransparency = 1
-lblLuz.Text = "Intensidade da Luz"
-lblLuz.TextColor3 = Color3.fromRGB(0, 150, 255)
-lblLuz.Font = Enum.Font.GothamBold
-lblLuz.TextSize = 12
-lblLuz.Parent = Scroll
+novo("TextLabel", {Size=UDim2.new(1,-160,0,14), Position=UDim2.new(0,58,0,30),
+	BackgroundTransparency=1, Text="by ABYSSAL â€¢ v5.0",
+	TextColor3=C.textDim, Font=Enum.Font.Gotham, TextSize=10,
+	TextXAlignment=Enum.TextXAlignment.Left, Parent=Header})
 
-criarInputComBotoes("Brilho", 15, 535, 1)
-criarInputComBotoes("Alcance", 12, 570, 1)
+local BtnMin = novo("TextButton", {Size=UDim2.new(0,30,0,30),
+	Position=UDim2.new(1,-74,0.5,-15), BackgroundColor3=C.input,
+	Text="â€“", TextColor3=C.text, Font=Enum.Font.GothamBold, TextSize=17,
+	AutoButtonColor=false, Parent=Header})
+cantos(BtnMin, 7)
 
--- Botão Principal de Aplicar
-local BotaoAplicar = Instance.new("TextButton")
-BotaoAplicar.Size = UDim2.new(0, 240, 0, 35)
-BotaoAplicar.Position = UDim2.new(0.5, -120, 0, 615)
-BotaoAplicar.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-BotaoAplicar.TextColor3 = Color3.fromRGB(255, 255, 255)
-BotaoAplicar.Font = Enum.Font.GothamBold
-BotaoAplicar.Text = "Aplicar Imagem & Luz"
-BotaoAplicar.TextSize = 14
-BotaoAplicar.Parent = Scroll
-Instance.new("UICorner", BotaoAplicar).CornerRadius = UDim.new(0, 4)
+local BtnFechar = novo("TextButton", {Size=UDim2.new(0,30,0,30),
+	Position=UDim2.new(1,-40,0.5,-15), BackgroundColor3=C.input,
+	Text="Ã—", TextColor3=C.text, Font=Enum.Font.GothamBold, TextSize=20,
+	AutoButtonColor=false, Parent=Header})
+cantos(BtnFechar, 7)
 
--- ==========================================
--- SISTEMA PARA ARRASTAR (DRAGGABLE)
--- ==========================================
-local dragging, dragInput, dragStart, startPos
+--==========================================
+-- TABS
+--==========================================
+local TabBar = novo("Frame", {Size=UDim2.new(1,-24,0,36),
+	Position=UDim2.new(0,12,0,64), BackgroundColor3=C.panel,
+	BorderSizePixel=0, Parent=Frame})
+cantos(TabBar, 9)
 
-Titulo.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		dragging = true
-		dragStart = input.Position
-		startPos = Frame.Position
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then dragging = false end
+local TabUnderline = novo("Frame", {Size=UDim2.new(0.2,-8,0,2),
+	Position=UDim2.new(0,4,1,-2), BackgroundColor3=C.accent,
+	BorderSizePixel=0, ZIndex=3, Parent=TabBar})
+cantos(TabUnderline, 1); gradiente(TabUnderline, C.accent, C.accent2, 0)
+
+local tabNomes = {"Imagem","Forma","Luz","Efeitos","Presets"}
+local Paginas, TabBtns = {}, {}
+
+for i, nome in ipairs(tabNomes) do
+	local page = novo("ScrollingFrame", {Name=nome,
+		Size=UDim2.new(1,-24,1,-228), Position=UDim2.new(0,12,0,112),
+		BackgroundTransparency=1, BorderSizePixel=0,
+		ScrollBarThickness=3, ScrollBarImageColor3=C.accent,
+		CanvasSize=UDim2.new(0,0,0,0),
+		AutomaticCanvasSize=Enum.AutomaticSize.Y,
+		Visible=false, Parent=Frame})
+	novo("UIListLayout", {Padding=UDim.new(0,6), SortOrder=Enum.SortOrder.LayoutOrder}, page)
+	novo("UIPadding", {PaddingTop=UDim.new(0,4), PaddingBottom=UDim.new(0,8),
+		PaddingRight=UDim.new(0,4)}, page)
+	Paginas[nome] = page
+
+	local btn = novo("TextButton", {Size=UDim2.new(1/#tabNomes,0,1,-6),
+		Position=UDim2.new((i-1)/#tabNomes,0,0,3), BackgroundTransparency=1,
+		Text=nome, TextColor3=C.textDim, Font=Enum.Font.GothamMedium,
+		TextSize=11, AutoButtonColor=false, Parent=TabBar})
+	TabBtns[nome] = btn
+end
+
+local function trocarAba(nome)
+	for n,p in pairs(Paginas) do p.Visible = (n == nome) end
+	for n,b in pairs(TabBtns) do
+		TweenService:Create(b, TweenInfo.new(0.2),
+			{TextColor3 = (n==nome) and Color3.fromRGB(255,255,255) or C.textDim}):Play()
+	end
+	local idx = 1
+	for i,n in ipairs(tabNomes) do if n==nome then idx=i break end end
+	TweenService:Create(TabUnderline,
+		TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Position = UDim2.new((idx-1)*(1/#tabNomes), 4, 1, -2),
+			Size = UDim2.new(1/#tabNomes, -8, 0, 2)}):Play()
+
+	if nome == "Presets" then
+		task.spawn(function()
+			if sincronizarPresets then sincronizarPresets() end
 		end)
 	end
-end)
-Titulo.InputChanged:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-		dragInput = input
+end
+
+for n,b in pairs(TabBtns) do
+	b.MouseButton1Click:Connect(function() trocarAba(n) end)
+end
+
+--==========================================
+-- WIDGETS
+--==========================================
+local function secao(parent, texto)
+	novo("TextLabel", {Size=UDim2.new(1,0,0,18), BackgroundTransparency=1,
+		Text=texto, TextColor3=C.accent, Font=Enum.Font.GothamBold,
+		TextSize=11, TextXAlignment=Enum.TextXAlignment.Left, Parent=parent})
+end
+
+local function slider(parent, nome, min, max, default, step)
+	local card = novo("Frame", {Size=UDim2.new(1,0,0,48),
+		BackgroundColor3=C.card, BorderSizePixel=0, Parent=parent})
+	cantos(card, 8)
+	novo("TextLabel", {Size=UDim2.new(0.6,-20,0,16), Position=UDim2.new(0,12,0,6),
+		BackgroundTransparency=1, Text=nome, TextColor3=C.text,
+		Font=Enum.Font.GothamMedium, TextSize=12,
+		TextXAlignment=Enum.TextXAlignment.Left, Parent=card})
+	local valueLbl = novo("TextLabel", {Size=UDim2.new(0.4,-20,0,16),
+		Position=UDim2.new(0.6,0,0,6), BackgroundTransparency=1, Text="",
+		TextColor3=C.accent, Font=Enum.Font.GothamBold, TextSize=12,
+		TextXAlignment=Enum.TextXAlignment.Right, Parent=card})
+	local track = novo("Frame", {Size=UDim2.new(1,-24,0,6),
+		Position=UDim2.new(0,12,0,32), BackgroundColor3=C.input,
+		BorderSizePixel=0, Parent=card})
+	cantos(track, 3)
+	local fill = novo("Frame", {Size=UDim2.new(0,0,1,0), BackgroundColor3=C.accent,
+		BorderSizePixel=0, Parent=track})
+	cantos(fill, 3); gradiente(fill, C.accent, C.accent2, 0)
+	local knob = novo("Frame", {Size=UDim2.new(0,14,0,14), AnchorPoint=Vector2.new(0.5,0.5),
+		Position=UDim2.new(0,0,0.5,0), BackgroundColor3=Color3.fromRGB(255,255,255),
+		BorderSizePixel=0, ZIndex=2, Parent=track})
+	cantos(knob, 7); stroke(knob, C.accent, 2, 0)
+	local hit = novo("TextButton", {Size=UDim2.new(1,0,0,30),
+		Position=UDim2.new(0,0,0,18), BackgroundTransparency=1,
+		Text="", ZIndex=3, Parent=card})
+
+	local valor = default
+	local dragging = false
+	local function setVisual(v, disparar)
+		v = math.clamp(v, min, max)
+		local rel = (max==min) and 0 or (v-min)/(max-min)
+		fill.Size = UDim2.new(rel,0,1,0)
+		knob.Position = UDim2.new(rel,0,0.5,0)
+		valueLbl.Text = fnum(v, step)
+		valor = v
+		if disparar and render then render() end
 	end
-end)
-UserInputService.InputChanged:Connect(function(input)
-	if input == dragInput and dragging then
-		local delta = input.Position - dragStart
-		Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	local function fromX(x)
+		local rel = (x - track.AbsolutePosition.X) / math.max(track.AbsoluteSize.X, 1)
+		rel = math.clamp(rel, 0, 1)
+		return math.floor(((min + (max-min)*rel) / step) + 0.5) * step
 	end
-end)
-
--- ==========================================
--- LÓGICA DE APLICAÇÃO NO CARRO
--- ==========================================
-BotaoAplicar.MouseButton1Click:Connect(function()
-	local character = player.Character
-	if not character then return end
-	
-	local humanoid = character:FindFirstChildOfClass("Humanoid")
-	if not humanoid then return end
-
-	if not humanoid.SeatPart then
-		BotaoAplicar.Text = "Senta-te num carro!"
-		task.wait(2)
-		BotaoAplicar.Text = "Aplicar Imagem & Luz"
-		return
-	end
-
-	local alvo = humanoid.SeatPart
-	local idDaImagem = inputId.Text:match("%d+")
-
-	-- Remove aura antiga
-	local velhaAura = alvo:FindFirstChild("UnderglowImagePart")
-	if velhaAura then velhaAura:Destroy() end
-
-	-- Cria o Bloco Base
-	local auraPart = Instance.new("Part")
-	auraPart.Name = "UnderglowImagePart"
-	auraPart.Anchored = false
-	auraPart.CanCollide = false
-	auraPart.Massless = true
-	
-	-- No começo fica visível para ajudar no posicionamento
-	auraPart.Transparency = 0.3 
-	auraPart.Color = Color3.fromRGB(255, 255, 255)
-	
-	-- SurfaceGui para a Imagem
-	local surfaceGui = Instance.new("SurfaceGui")
-	surfaceGui.Name = "ImagemGui"
-	surfaceGui.Face = Enum.NormalId.Top
-	surfaceGui.LightInfluence = 1
-	surfaceGui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
-	surfaceGui.PixelsPerStud = 50
-	surfaceGui.Parent = auraPart
-
-	local imageLabel = Instance.new("ImageLabel")
-	imageLabel.Size = UDim2.new(1, 0, 1, 0)
-	imageLabel.BackgroundTransparency = 1 
-	if idDaImagem then
-		imageLabel.Image = "rbxthumb://type=Asset&id=" .. idDaImagem .. "&w=420&h=420"
-	end
-	imageLabel.Parent = surfaceGui
-
-	-- ===== LUZ SUPER FORTE =====
-	local luzGlow = Instance.new("SurfaceLight")
-	luzGlow.Name = "LuzUnderglow"
-	luzGlow.Face = Enum.NormalId.Bottom -- Emite luz para o chão
-	luzGlow.Angle = 120
-	luzGlow.Parent = auraPart
-
-	-- Solda a peça no carro
-	local weld = Instance.new("Weld")
-	weld.Part0 = alvo
-	weld.Part1 = auraPart
-	weld.Parent = auraPart
-	
-	auraPart.Parent = alvo
-	
-	-- Define variáveis globais para a edição ao vivo funcionar
-	auraAtual = auraPart
-	weldAtual = weld
-	luzAtual = luzGlow
-
-	-- Aplica imediatamente os valores que estão na UI (Cor, Brilho, Alcance)
-	atualizarGlowAoVivo()
-	
-	BotaoAplicar.Text = "Aplicado com Sucesso!"
-	
-	-- Mágica do desaparecimento da caixa física
-	task.spawn(function()
-		task.wait(3)
-		local fade = TweenService:Create(auraPart, TweenInfo.new(1.5), {Transparency = 1})
-		fade:Play()
+	hit.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true; setVisual(fromX(input.Position.X), true)
+		end
 	end)
-
-	task.wait(1.5)
-	BotaoAplicar.Text = "Aplicar Imagem & Luz"
-end)
+	UIS.InputChanged:Connect(function(input)
+		if not dragging then return end
+		if input.UserInputType == Enum.UserInputType.MouseMovement
+		or input.UserInputType == Enum.UserInputType.Touch then
+			setVisual(fromX(input.Position.X), true)
+		end
+	end)
+	UIS.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+		o
